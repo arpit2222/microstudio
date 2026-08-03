@@ -1,0 +1,156 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CREATOR
+  VIEWER
+  TALENT
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String?
+  role      UserRole @default(VIEWER)
+  bio       String?
+  avatarUrl String?
+
+  projects           Project[]
+  engagements        Engagement[]
+  talentProfile      TalentProfile?
+  crowdfundPledges   CrowdfundPledge[]
+  createdAt          DateTime @default(now())
+}
+
+enum ProjectStatus {
+  DRAFT
+  PILOT
+  FUNDING
+  PRODUCED
+}
+
+model Project {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  creatorId String   @db.ObjectId
+  title     String
+  premise   String?
+  status    ProjectStatus @default(DRAFT)
+  engagementScore Int @default(0)
+  
+  creator   User     @relation(fields: [creatorId], references: [id])
+  
+  mediaAssets        MediaAsset[]
+  engagements        Engagement[]
+  castingCalls       CastingCall[]
+  crowdfundPledges   CrowdfundPledge[]
+  createdAt          DateTime @default(now())
+}
+
+enum MediaAssetType {
+  SCRIPT
+  VIDEO
+  AUDIO
+  THUMBNAIL
+  TRAILER
+}
+
+model MediaAsset {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId   String   @db.ObjectId
+  type        MediaAssetType
+  b2Key       String
+  metadata    Json?    // Provenance metadata as JSON
+  
+  project     Project  @relation(fields: [projectId], references: [id])
+  
+  talentReels      TalentProfile[] @relation("ReelAsset")
+  talentReferences TalentProfile[] @relation("ReferenceAsset")
+  createdAt   DateTime @default(now())
+}
+
+enum EngagementType {
+  LIKE
+  COMMENT
+  SHARE
+}
+
+model Engagement {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  projectId String   @db.ObjectId
+  type      EngagementType
+  
+  user      User     @relation(fields: [userId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
+model TalentProfile {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  reelAssetId String?  @db.ObjectId
+  skills      String[] // e.g. ["Acting", "Voiceover"]
+  bio         String?
+  
+  consentForAIGeneration Boolean @default(false)
+  referenceAssetId       String? @db.ObjectId
+  
+  user           User        @relation(fields: [userId], references: [id])
+  reelAsset      MediaAsset? @relation("ReelAsset", fields: [reelAssetId], references: [id])
+  referenceAsset MediaAsset? @relation("ReferenceAsset", fields: [referenceAssetId], references: [id])
+  
+  applications CastingApplication[]
+}
+
+enum CastingCallStatus {
+  OPEN
+  CLOSED
+}
+
+model CastingCall {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId    String   @db.ObjectId
+  roleName     String
+  description  String
+  royaltyTerms String?
+  status       CastingCallStatus @default(OPEN)
+  
+  project      Project  @relation(fields: [projectId], references: [id])
+  applications CastingApplication[]
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model CastingApplication {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  castingCallId String   @db.ObjectId
+  talentId      String   @db.ObjectId
+  status        ApplicationStatus @default(PENDING)
+  
+  castingCall   CastingCall   @relation(fields: [castingCallId], references: [id])
+  talent        TalentProfile @relation(fields: [talentId], references: [id])
+}
+
+model CrowdfundPledge {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId    String   @db.ObjectId
+  userId       String   @db.ObjectId
+  amount       Float
+  royaltyShare Float    // Percentage
+
+  project      Project  @relation(fields: [projectId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+}
