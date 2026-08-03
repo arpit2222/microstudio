@@ -117,11 +117,19 @@ export async function listAssetsByProject(projectId: string) {
 
   const assetsWithUrls = await Promise.all(
     assets.map(async (asset) => {
+      // Intercept our dummy data from the seed script since those files don't actually exist in your B2 bucket
+      if (asset.b2Key.startsWith("mock_")) {
+        return {
+          ...asset,
+          url: "https://www.w3schools.com/html/mov_bbb.mp4"
+        };
+      }
+
       const getCommand = new GetObjectCommand({
         Bucket: B2_BUCKET_NAME,
         Key: asset.b2Key,
       });
-      // Generate fresh signed URL for each asset for frontend consumption
+      // Generate fresh signed URL for each real asset for frontend consumption
       const signedUrl = await getSignedUrl(s3Client, getCommand, { expiresIn: 3600 });
       
       return {
