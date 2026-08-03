@@ -112,11 +112,11 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       assets: {
-        script: scriptAsset.publicUrl,
-        rawVideo: videoAsset.publicUrl,
-        rawVoice: voiceAsset.publicUrl,
-        rawMusic: musicAsset.publicUrl,
-        finalPilot: finalAsset.publicUrl,
+        script: scriptAsset.signedUrl,
+        rawVideo: videoAsset.signedUrl,
+        rawVoice: voiceAsset.signedUrl,
+        rawMusic: musicAsset.signedUrl,
+        finalPilot: finalAsset.signedUrl,
       },
       finalAssetRecord: finalAsset.mediaAsset
     });
