@@ -153,7 +153,7 @@ async def generate_pilot(req: GenerationRequest):
                 return {
                     "sourceModel": step.model,
                     "provider": step.provider,
-                    "prompt": step.request.prompt if step.request else "N/A",
+                    "prompt": step.prompt if step.prompt else "N/A",
                     "manifest_hash": hash_val, 
                     "timestamp": datetime.utcnow().isoformat()
                 }
