@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     // Temporary hack for hackathon: grab any user, or create one if db is empty
-    let user = await prisma.user.findFirst();
+    let user = await prisma.user.findFirst({ where: { role: "CREATOR" } });
     if (!user) {
       user = await prisma.user.create({
         data: {
