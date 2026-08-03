@@ -48,3 +48,9 @@ __pycache__/
 *.class
 venv/
 .env
+
+# AI Agent Folders
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
