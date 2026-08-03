@@ -41,8 +41,9 @@ export async function uploadAsset(
     Body: buffer,
     ContentType: contentType,
     // Store provenance directly on the object metadata as well (for durability outside the DB)
+    // We base64 encode it because S3 HTTP headers cannot contain non-ASCII characters (like emojis or special dashes in prompts!)
     Metadata: {
-      provenance: JSON.stringify(provenance),
+      provenance: Buffer.from(JSON.stringify(provenance)).toString("base64"),
     },
   });
 
@@ -91,7 +92,13 @@ export async function getAssetMetadata(key: string) {
     let provenance: ProvenanceMetadata | null = null;
     
     if (response.Metadata && response.Metadata.provenance) {
-      provenance = JSON.parse(response.Metadata.provenance);
+      try {
+        const decoded = Buffer.from(response.Metadata.provenance, "base64").toString("utf-8");
+        provenance = JSON.parse(decoded);
+      } catch (e) {
+        // Fallback for older plaintext uploads
+        provenance = JSON.parse(response.Metadata.provenance);
+      }
     }
     
     return {
