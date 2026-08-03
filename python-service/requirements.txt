@@ -2,4 +2,4 @@ fastapi
 uvicorn
 moviepy
 pydantic
-git+https://github.com/backblaze-labs/genblaze.git
+git+https://github.com/backblaze-labs/genblaze.git#subdirectory=libs/meta
